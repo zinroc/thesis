@@ -21,6 +21,12 @@ def get_loss (X, Y, parameters, left_cutoff, right_cutoff):
 	return loss
 	
 def get_gradient (parameters):
+	"""
+	df_dk0 = ...
+	
+	
+	return [df_dk0, df_dk1, ]"""
+	
 	pass
 	
 def mod_maxwell(parameters, time):
@@ -98,6 +104,7 @@ def main():
 	#	if loss very close to 0, break
 	
 	# return parameters
+	
 	pass
 	
 def show_data():
