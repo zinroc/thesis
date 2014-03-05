@@ -1,24 +1,69 @@
 from matplotlib import pyplot as plt
 import csv
+import math
 
-def get_hypothesis(X, fn, parameters):
-	pass
+def get_hypothesis(X, parameters):
+	return [saturation_function(parameters, time) for time in X]
 	
-def get_loss (Y, hypothesis):
-	pass
+def get_loss (X, Y, parameters, left_cutoff, right_cutoff):
+	loss = 0
+	c = 0
+
+	for time in sorted(X):
+		if time > right_cutoff:
+			break
+			
+		if time >= left_cutoff:
+			loss += (Y[c] - saturation_function(parameters, time)) ** 2
+			
+		c += 1
+			
+	return loss
 	
 def get_gradient (parameters):
 	pass
 	
 def mod_maxwell(parameters, time):
 
-	return parameters[0] * time
+	K0 = parameters[0]
+	K1 = parameters[1]
+	N0 = parameters[2]
+	N1 = parameters[3]
+	N2 = parameters[4]
+	T  = N0*(K0+K1)/(K0*K1)
+	dt = parameters[5]
+	C3 = parameters[6]
+	Cvert = parameters[7]
+	r = parameters[8]
+	return -1*((1/K1)*(1-(K0/(K0+K1))*math.exp(-1*(time-dt)/(T)))+(time-dt)/N1)
 	
 def s_curve (parameters, time):
-	pass
+	K0 = parameters[0]
+	K1 = parameters[1]
+	N0 = parameters[2]
+	N1 = parameters[3]
+	N2 = parameters[4]
+	T  = N0*(K0+K1)/(K0*K1)
+	dt = parameters[5]
+	C3 = parameters[6]
+	Cvert = parameters[7]
+	r = parameters[8]
+	return 1/(1+C3*math.exp((-time + dt)*r))
 	
-def c_vert(parameters, time):
-	pass
+def steady(parameters, time):
+	K0 = parameters[0]
+	K1 = parameters[1]
+	N0 = parameters[2]
+	N1 = parameters[3]
+	N2 = parameters[4]
+	T  = N0*(K0+K1)/(K0*K1)
+	dt = parameters[5]
+	C3 = parameters[6]
+	Cvert = parameters[7]
+	r = parameters[8]
+	
+	# note that in Sergei's initial calculation, this is just time / N2 + Cvert
+	return (time-dt)/N2 + Cvert
 	
 def saturation_function(parameters, time):
 	"""Parameters is a vector in the following order:
@@ -27,10 +72,14 @@ def saturation_function(parameters, time):
 		* N0
 		* N1
 		* N2
+		* dt
+		* C3 
+		* Cvert
+		* r
 		
 	"""
 	
-	pass
+	return mod_maxwell(parameters,time)*s_curve(parameters,time) + steady(parameters,time)
 	
 def main():
 	# set max # iterations
@@ -56,7 +105,9 @@ def show_data():
 
 	time = []
 	f5 = []
+	y_fitted = []
 	header = True
+	parameters = [999999999999999, 0.189, 300, -290, -293, 5000, 1000, -11.1, 0.1]
 
 	with open("data.csv", "rb") as fp:
 		reader = csv.reader(fp, delimiter=",")
@@ -64,11 +115,14 @@ def show_data():
 			if header:
 				header = False
 			else:
-				print row
-				time.append(float(row[0]))
+				#print row
+				t = float(row[0])
+				time.append(t)
 				f5.append(float(row[1]))
-			
-	plt.plot(time, f5)
+				y_fitted.append (saturation_function (parameters, t))
+
+	print "Total loss is %.2f" % (get_loss(time, f5, parameters, 1700, 9000))
+	plt.plot(time, f5, 'bo', time, y_fitted, 'r+')
 	plt.show()
 	
 if __name__ == "__main__":
