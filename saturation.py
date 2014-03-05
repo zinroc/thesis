@@ -10,28 +10,23 @@ def get_loss (Y, hypothesis):
 def get_gradient (parameters):
 	pass
 	
-def mod_maxwell(parameters, data):
+def mod_maxwell(parameters, time):
+
+	return parameters[0] * time
+	
+def s_curve (parameters, time):
 	pass
 	
-def s_curve (parameters, data):
+def c_vert(parameters, time):
 	pass
 	
-def c_vert(parameters, data):
-	pass
-	
-def saturation_function(parameters, data):
+def saturation_function(parameters, time):
 	"""Parameters is a vector in the following order:
 		* K0
 		* K1
 		* N0
 		* N1
 		* N2
-		
-		data is vector in the order:
-			* time
-			* f-5
-			* Tbuffer
-			* Ftime
 		
 	"""
 	
