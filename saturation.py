@@ -1,24 +1,13 @@
 from matplotlib import pyplot as plt
 import csv
 import math
+import numpy as np
 
-def get_hypothesis(X, parameters):
-	return [saturation_function(parameters, time) for time in X]
-	
-def get_loss (X, Y, parameters, left_cutoff, right_cutoff):
-	loss = 0
-	c = 0
+"""
+These are the methods specific to the function being optimized
+"""
 
-	for time in sorted(X):
-		if time > right_cutoff:
-			break
-			
-		if time >= left_cutoff:
-			loss += (Y[c] - saturation_function(parameters, time)) ** 2
-			
-		c += 1
-			
-	return loss
+################################################################################################
 	
 def get_gradient (parameters):
 	"""
@@ -35,7 +24,7 @@ def get_gradient (parameters):
 	
 	pass
 	
-def mod_maxwell(parameters, time):
+def mod_maxwell(time, parameters):
 
 	K0 = parameters[0]
 	K1 = parameters[1]
@@ -47,9 +36,9 @@ def mod_maxwell(parameters, time):
 	C3 = parameters[6]
 	Cvert = parameters[7]
 	r = parameters[8]
-	return -1*((1/K1)*(1-(K0/(K0+K1))*math.exp(-1*(time-dt)/(T)))+(time-dt)/N1)
+	return -1*((1/K1)*(1-(K0/(K0+K1))*np.exp(-1*(time-dt)/(T)))+(time-dt)/N1)
 	
-def s_curve (parameters, time):
+def s_curve (time, parameters):
 	K0 = parameters[0]
 	K1 = parameters[1]
 	N0 = parameters[2]
@@ -60,9 +49,9 @@ def s_curve (parameters, time):
 	C3 = parameters[6]
 	Cvert = parameters[7]
 	r = parameters[8]
-	return 1/(1+C3*math.exp((-time + dt)*r))
+	return 1/(1+C3*np.exp((-time + dt)*r))
 	
-def steady(parameters, time):
+def steady(time, parameters):
 	K0 = parameters[0]
 	K1 = parameters[1]
 	N0 = parameters[2]
@@ -77,7 +66,7 @@ def steady(parameters, time):
 	# note that in Sergei's initial calculation, this is just time / N2 + Cvert
 	return (time-dt)/N2 + Cvert
 	
-def saturation_function(parameters, time):
+def saturation_function(time, parameters):
 	"""Parameters is a vector in the following order:
 		* K0
 		* K1
@@ -91,36 +80,63 @@ def saturation_function(parameters, time):
 		
 	"""
 	
-	return mod_maxwell(parameters,time)*s_curve(parameters,time) + steady(parameters,time)
-	
-def main():
-	# set max # iterations
+	return mod_maxwell(time, parameters) * s_curve(time, parameters) + steady(time, parameters)
 
-	# load data
+##################################################################
+
+"""
+Function-agnostic methods
+"""
+
+def get_loss(X, Y, parameters, left_cutoff, right_cutoff):
+	"""Return float that gives loss of function being optimized compared to ideal scenario.
+	"""
+
+	# used to zero out the guys that are outside our range
+	factor = np.ones(len(X))
+	low_value_indeces = X < left_cutoff
+	factor[low_value_indeces] = 0
+	high_value_indeces = X > right_cutoff
+	factor[high_value_indeces] = 0
+
+	return np.sum(factor * (Y - saturation_function(X, parameters)) ** 2)
+	
+def optimize(X, Y, left_cutoff, right_cutoff):
+	"""Tune parameters for the given function."""
+
+	MAX_ITERATIONS = 1000
+	LAMBDA = 0.001
+	EPSILON = 0.05
 
 	# get initial guess for parameters
-	# get hypothesis
-	# get loss
+	parameters = np.random.randint(-100, 100, size=9) * 1.0
+	# the first parameter should be very high
+	# second parameter and last parameter set to 0.1
+	parameters[0] = 9999999999999
+	parameters[1] = 0.1
+	parameters[-1] = 0.1
+
+	for it in range(MAX_ITERATIONS):
+		loss = get_loss(X, Y, parameters, left_cutoff, right_cutoff)
+		if loss < EPSILON:
+			print "*** close enough"
+			break
+		elif loss == float("+inf") or math.isnan(loss):
+			print "*** [ERROR] OVERFLOW!!!"
+			print "*** Consider setting learning rate to smaller value"
+			break
+
+		#TODO calculate gradients
+		#set new parameters
+
+	return parameters
 	
-	# while # iterations < max # iterations
-	# 	get gradient 	
-	# 	update parameters
-	# 	get hypothesis
-	# 	get loss
-	#	if loss very close to 0, break
-	
-	# return parameters
-	
-	pass
-	
-def show_data():
-	"""Show pretty plot of F5 vs. Time to make sure data imported correctly."""
+def load_data():
+	"""Return X, Y as np.array tuple."""
 
 	time = []
 	f5 = []
-	y_fitted = []
 	header = True
-	parameters = [999999999999999, 0.189, 300, -290, -293, 5000, 1000, -11.1, 0.1]
 
 	with open("data.csv", "rb") as fp:
 		reader = csv.reader(fp, delimiter=",")
@@ -131,12 +147,30 @@ def show_data():
 				#print row
 				t = float(row[0])
 				time.append(t)
+				#Y_fitted.append(saturation_function())
 				f5.append(float(row[1]))
-				y_fitted.append (saturation_function (parameters, t))
 
-	print "Total loss is %.2f" % (get_loss(time, f5, parameters, 1700, 9000))
-	plt.plot(time, f5, 'bo', time, y_fitted, 'r+')
+	return (np.array(time), np.array(f5))
+
+def show_data(X, Y, left_cutoff, right_cutoff):
+	"""Show pretty plot of F5 vs. Time to make sure data imported correctly."""
+	
+	Y_fitted = []
+	parameters = [999999999999999, 0.189, 300, -290, -293, 5000, 1000, -11.1, 0.1]
+	
+	Y_fitted = saturation_function(X, parameters)
+
+	print "Total loss is %.2f" % (get_loss(X, Y, parameters, left_cutoff, right_cutoff))
+	plt.plot(X, Y, 'bo', X, Y_fitted, 'r+')
 	plt.show()
 	
 if __name__ == "__main__":
-	show_data()
+	
+
+	# data and user-defined parameters
+	X, Y = load_data()
+	left_cutoff = 1700
+	right_cutoff = 9000
+	#show_data(X, Y, left_cutoff, right_cutoff)
+
+	optimize(X, Y, left_cutoff, right_cutoff)
