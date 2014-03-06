@@ -22,8 +22,14 @@ def get_loss (X, Y, parameters, left_cutoff, right_cutoff):
 	
 def get_gradient (parameters):
 	"""
-	df_dk0 = ...
-	
+	df_dt = ((1/(N0*(K0+K1)^2))*(K0^2)*math.exp((K0*K1*(dt-t))/(N0(K0+K1)))+1/N1)*(-1/(C3*math.exp(r*(dt-t))+1))+(C3*r*(math.exp(r*(dt-t)))*((1/K1)*((K0/(K0+K1))*math.exp((K0*K1*(dt-t)/(N0*(K0+K1))))-1))+(dt-t)/N1)/((C3*math.exp(r*(dr-t))+1)^2)+1/N2
+	df_dk0 = math.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(dt*K0*K1+K0*(N0-K1*t)+K1*N0)/(((K0+K1)^3)*(C3*N0*math.exp(r*(dt-t))+N0))
+	df_dk1 = (-1/((K1^2)*(C3*math.exp(r*(dt-t))+1)))*(K0*K1*math.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(-dt*(K0^2)+(K0^2)*t+K0*N0+K1*N0)/(N0*(K0+K1)^3)+((K0/(K0+K1))*math.exp((K0*K1*(dt-t))/(N0*(K0+K1)))-1))
+	df_dN0 = -(K0^2)*(dt-t)*math.exp((K0*K1*(dt-t))/(N0*(K0+K1)))/((N0^2)*((K0+K1)^2)*(C3*math.exp(r*(dt-t))+1))
+	df_dN1 = (t-dt)/((N1^2)*(C3*math.exp(r*(dt-t))+1))
+	df_dN2 = (dt-t)/(N2^2)
+	OPTIONAL - finding dt
+	df_ddt = ((1/(N0*(K0+K1)^2))*(K0^2)*math.exp((K0*K1*(dt-t))/(N0(K0+K1)))+1/N1)*(-1/(C3*math.exp(r*(dt-t))+1))+(C3*r*(math.exp(r*(dt-t)))*((1/K1)*((K0/(K0+K1))*math.exp((K0*K1*(dt-t)/(N0*(K0+K1))))-1))+(dt-t)/N1)/((C3*math.exp(r*(dr-t))+1)^2)-1/N2
 	
 	return [df_dk0, df_dk1, ]"""
 	
