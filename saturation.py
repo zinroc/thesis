@@ -106,7 +106,8 @@ def saturation_function(time, parameters):
 ##################################################################
 
 """
-Function-agnostic methods
+Function-agnostic methods.
+This is the meat of the program
 """
 
 def get_gradient(X, Y, parameters):
