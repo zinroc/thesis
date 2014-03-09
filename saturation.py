@@ -183,11 +183,39 @@ def randomize_parameters():
 	parameters[3] = -1.0 * math.exp(random.randint(1, 15))
 	parameters[4] = -1.0 * math.exp(random.randint(1, 15))
 	return parameters
+	
+def read_parameters_from_file():
+	#placeholders
+	parameters = np.zeros(5) * 1.0
+	order = ["k0", "k1", "n0", "n1", "n2"]
+
+	with open("parameters.csv", "rb") as fp:
+		reader = csv.reader(fp, delimiter="=")
+		for row in reader:
+			if row[0].lower() in order:
+				i = order.index(row[0].strip().lower())
+				parameters[i] = float(row[1].strip())
+			else:
+				print "[ERROR] Read invalid item %s" % row[0]
+				sys.exit(1)
+				
+	for i in range(len(order)):
+		print "%s=%s" % (order[i], str(parameters[i]))
+	user_in = "x"
+	
+	while user_in not in ["y", "n"]:
+		user_in = raw_input("This is OK? [y/n] ")
+		
+	if user_in == "y":
+		return parameters
+	else:
+		sys.exit(1)
 
 def set_parameters():
 	#parameters = np.array([9000, 0.189, 300, -290, -293])
-	parameters = np.array([9000, 0.1, 300, -300, -300])
+	#parameters = np.array([9000, 0.1, 300, -300, -300])
 	#parameters = randomize_parameters()
+	parameters = read_parameters_from_file()
 	return parameters
 	
 def scipy_optimize(X, Y, aux_parameters, parameters):
