@@ -28,13 +28,10 @@ def get_saturation_gradient (t, parameters, aux_parameters):
 	N0 = parameters[2]
 	N1 = parameters[3]
 	N2 = parameters[4]
-	#T = N0*(K0+K1)/(K0*K1)
-	#=N0K0 / K0K1 + N0K1/K0K1
-   	#=N0/K1 + N0/K0	
-	T = N0 / K1 + N0 / K0
 	dt = aux_parameters["dt"]
-	C3 = aux_parameters["C3"]
-	Cvert = aux_parameters["Cvert"]
+	T = N0 / K1 + N0 / K0
+	C3 = aux_parameters["c3"]
+	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
 
 	#old: df_dt = ((1 / (N0 * (K0 + K1) **2 )) * (K0 ** 2) * np.exp(K0 * K1 * (dt - t) / (N0 * (K0+K1)))+ 1 / N1) * (-1 / (C3*np.exp(r * (dt - t)) + 1)) + (C3 * r * (np.exp(r*(dt - t)))*((1/K1)*((K0/(K0+K1))*np.exp(K0 * K1 * (dt - t)/(N0 * (K0 + K1)))-1))+(dt-t)/N1) / ((C3*np.exp(r*(dr-t))+1)**2) + 1/N2
@@ -46,9 +43,9 @@ def get_saturation_gradient (t, parameters, aux_parameters):
 	df_dN1 = (t-dt)/((N1**2)*(C3*np.exp(r*(dt-t))+1))
 	df_dN2 = (dt-t)/(N2**2)
 	#OPTIONAL - finding dt
-	#df_ddt = ((1/(N0*(K0+K1)^2))*(K0^2)*np.exp((K0*K1*(dt-t))/(N0(K0+K1)))+1/N1)*(-1/(C3*np.exp(r*(dt-t))+1))+(C3*r*(np.exp(r*(dt-t)))*((1/K1)*((K0/(K0+K1))*np.exp((K0*K1*(dt-t)/(N0*(K0+K1))))-1))+(dt-t)/N1)/((C3*np.exp(r*(dr-t))+1)^2)-1/N2
+	df_ddt = ((1/(N0*(K0+K1) ** 2))*(K0 ** 2)*np.exp((K0*K1*(dt-t))/(N0 * (K0+K1)))+1/N1)*(-1/(C3*np.exp(r*(dt-t))+1))+(C3*r*(np.exp(r*(dt-t)))*((1/K1)*((K0/(K0+K1))*np.exp((K0*K1*(dt-t)/(N0*(K0+K1))))-1))+(dt-t)/N1)/((C3*np.exp(r*(dt-t))+1) ** 2)-1/N2
 	
-	return np.array([df_dk0, df_dk1, df_dN0, df_dN1, df_dN2])
+	return np.array([df_dk0, df_dk1, df_dN0, df_dN1, df_dN2, df_ddt])
 	
 def mod_maxwell(time, parameters, aux_parameters):
 
@@ -57,13 +54,10 @@ def mod_maxwell(time, parameters, aux_parameters):
 	N0 = parameters[2]
 	N1 = parameters[3]
 	N2 = parameters[4]
-	T = N0*(K0+K1)/(K0*K1)
-	#=N0K0 / K0K1 + N0K1/K0K1
-   	#=N0/K1 + N0/K0	
-	#T = N0 / K1 + N0 / K0
 	dt = aux_parameters["dt"]
-	C3 = aux_parameters["C3"]
-	Cvert = aux_parameters["Cvert"]
+	T = N0 / K1 + N0 / K0
+	C3 = aux_parameters["c3"]
+	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
 	adjusted_t = time-dt
 
@@ -71,18 +65,15 @@ def mod_maxwell(time, parameters, aux_parameters):
 	#return -1*((1/K1)*(1-(K0/(K0+K1)) * np.exp((dt - time) / T)) + (time - dt) / N1)
 	
 def s_curve (time, parameters, aux_parameters):
-	K0 = parameters[0]
-	K1 = parameters[1]
-	N0 = parameters[2]
+	#K0 = parameters[0]
+	#K1 = parameters[1]
+	#N0 = parameters[2]
 	#N1 = parameters[3]
 	#N2 = parameters[4]
-	#T = N0*(K0+K1)/(K0*K1)
-	#=N0K0 / K0K1 + N0K1/K0K1
-   	#=N0/K1 + N0/K0	
-	#T = N0 / K1 + N0 / K0
 	dt = aux_parameters["dt"]
-	C3 = aux_parameters["C3"]
-	Cvert = aux_parameters["Cvert"]
+	#T = N0 / K1 + N0 / K0
+	C3 = aux_parameters["c3"]
+	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
 	
 	return 1/(1+C3*np.exp((-time + dt)*r))
@@ -93,10 +84,10 @@ def steady(time, parameters, aux_parameters):
 	#N0 = parameters[2]
 	#N1 = parameters[3]
 	N2 = parameters[4]
-	#T  = N0*(K0+K1)/(K0*K1)
 	dt = aux_parameters["dt"]
-	C3 = aux_parameters["C3"]
-	Cvert = aux_parameters["Cvert"]
+	#T = N0 / K1 + N0 / K0
+	C3 = aux_parameters["c3"]
+	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
 	
 	# note that in Sergei's initial calculation, this is just time / N2 + Cvert
@@ -185,29 +176,36 @@ def randomize_parameters():
 	return parameters
 	
 def read_parameters_from_file():
+	tuned = ["k0", "k1", "n0", "n1", "n2"]
+	user_defined = ["dt", "c3", "cvert", "r"]
 	#placeholders
-	parameters = np.zeros(5) * 1.0
-	order = ["k0", "k1", "n0", "n1", "n2"]
+	parameters = np.zeros(len(tuned)) * 1.0
+	d = {}
 
 	with open("parameters.csv", "rb") as fp:
 		reader = csv.reader(fp, delimiter="=")
 		for row in reader:
-			if row[0].lower() in order:
-				i = order.index(row[0].strip().lower())
+			if row[0].lower().strip() in tuned:
+				i = tuned.index(row[0].strip().lower())
 				parameters[i] = float(row[1].strip())
+			elif row[0].lower().strip() in user_defined:
+				d[row[0].lower().strip()] = float(row[1].strip())
 			else:
 				print "[ERROR] Read invalid item %s" % row[0]
 				sys.exit(1)
 				
-	for i in range(len(order)):
-		print "%s=%s" % (order[i], str(parameters[i]))
+	for i in range(len(tuned)):
+		print "%s=%s" % (tuned[i], str(parameters[i]))
+	for k, v in d.iteritems():
+		print "%s=%s" % (k, str(v))
+		
 	user_in = "x"
 	
 	while user_in not in ["y", "n"]:
 		user_in = raw_input("This is OK? [y/n] ")
 		
 	if user_in == "y":
-		return parameters
+		return parameters, d
 	else:
 		sys.exit(1)
 
@@ -276,22 +274,21 @@ if __name__ == "__main__":
 	
 	graph_left_cutoff = 0
 	graph_right_cutoff = 10000
-	
-	aux_params = {
-		"dt" : 5000, 
-		"C3" : 1000, 
-		"Cvert" : -11.1,
-		"r": 0.1
-	}
 
 	# simply remove the data which should not be optimized for
 	# make sure that Y is also trimmed
 	optimization_X, optimization_Y = trim_data(raw_X, raw_Y, optimization_left_cutoff, optimization_right_cutoff)
 	display_X, display_Y = trim_data(raw_X, raw_Y, graph_left_cutoff, graph_right_cutoff)
 	
-	parameter_guess = set_parameters()
+	parameter_guess, aux_params = set_parameters()
 	
 	new_params = scipy_optimize(optimization_X, optimization_Y, aux_params, parameter_guess)
+	
+	tuned = ["k0", "k1", "n0", "n1", "n2"]
+	for i in range(len(new_params)):
+		print "%s = %.3f" % (tuned[i].upper(), new_params[i])
+		
+	
 	if new_params is not None:
 		# showing optimization over the new data
 		print "parameters:"
