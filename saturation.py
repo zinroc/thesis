@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 from matplotlib import pyplot as plt
 import csv
 import math
@@ -193,13 +194,13 @@ def read_parameters_from_file():
 			elif row[0].lower().strip() in user_defined:
 				d[row[0].lower().strip()] = float(row[1].strip())
 			else:
-				print "[ERROR] Read invalid item %s" % row[0]
+				print("[ERROR] Read invalid item %s" % row[0])
 				sys.exit(1)
 				
 	for i in range(len(tuned)):
-		print "%s=%s" % (tuned[i], str(parameters[i]))
+		print("%s=%s" % (tuned[i], str(parameters[i])))
 	for k, v in d.iteritems():
-		print "%s=%s" % (k, str(v))
+		print("%s=%s" % (k, str(v)))
 		
 	user_in = "x"
 	
@@ -219,13 +220,13 @@ def set_parameters():
 	return parameters
 	
 def scipy_optimize(X, Y, aux_parameters, parameters):
-	print "[intial parameters] %s" % str(parameters)
-	print "[initial loss] %.1f" % get_loss(X, Y, parameters, aux_parameters)
+	print("[intial parameters] %s" % str(parameters))
+	print("[initial loss] %.1f" % get_loss(X, Y, parameters, aux_parameters))
 	obj_fn = get_obj_function(X, Y, aux_parameters)
 	grad_obj_fn = get_gradient_function(X, Y, aux_parameters)
 	new_params = scipy.optimize.fmin_bfgs(obj_fn, parameters, fprime=grad_obj_fn)
-	print "[final parameters] %s" % str(new_params)
-	print "[final loss] %.1f" % get_loss(X, Y, new_params, aux_parameters)
+	print("[final parameters] %s" % str(new_params))
+	print("[final loss] %.1f" % get_loss(X, Y, new_params, aux_parameters))
 	return new_params
 	
 def load_data():
@@ -259,6 +260,9 @@ def show_data(X, Y, parameter_guess, optimized_params, aux_parameters):
 	#print "Total loss is %.2f" % (get_loss(X, Y, parameters, aux_params))
 	plt.plot(X, Y, 'bo', X, guess_fitted, 'r+', X, optimized_fitted, 'r-')
 	plt.show()
+
+	plt.plot(X, Y, 'bo', X, optimized_fitted, 'r-')
+	plt.show()
 	
 def trim_data (X, Y, left_cutoff, right_cutoff):
 	new_Y = Y[np.where(X >= left_cutoff)]
@@ -288,12 +292,12 @@ if __name__ == "__main__":
 	
 	tuned = ["k0", "k1", "n0", "n1", "n2"]
 	for i in range(len(new_params)):
-		print "%s = %.3f" % (tuned[i].upper(), new_params[i])
+		print("%s = %.3f" % (tuned[i].upper(), new_params[i]))
 		
 	
 	if new_params is not None:
 		# showing optimization over the new data
-		print "parameters:"
-		print new_params
+		print("parameters:")
+		print(new_params)
 		show_data(display_X, display_Y, parameter_guess, new_params, aux_params)
 
