@@ -148,16 +148,6 @@ def get_loss(X, Y, parameters, aux_parameters):
 	"""Return float that gives loss of function being optimized compared to ideal scenario.
 	"""
 
-	# used to zero out the guys that are outside our range
-	#factor = np.ones(len(X))
-	#if left_cutoff is not None:
-	#	low_value_indeces = X < left_cutoff
-	#	factor[low_value_indeces] = 0
-
-	#if right_cutoff is not None:
-	#	high_value_indeces = X > right_cutoff
-	#	factor[high_value_indeces] = 0
-
 	return np.sum((Y - saturation_function(X, parameters, aux_parameters)) ** 2)
 
 def randomize_parameters():
@@ -179,15 +169,19 @@ def randomize_parameters():
 	return parameters
 	
 def read_parameters_from_file():
+	"""Read user-defined parameters from a file."""
+
 	tuned = ["k0", "k1", "n0", "n1", "n2"]
-	user_defined = ["dt", "c3", "cvert", "r"]
+	user_defined = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff"])
 	#placeholders
 	parameters = np.zeros(len(tuned)) * 1.0
 	d = {}
 
 	with open("parameters.csv", "rb") as fp:
-		reader = csv.reader(fp, delimiter="=")
-		for row in reader:
+		for line in fp:
+			if line.startswith("#") or len(line.strip()) == 0:
+				continue
+			row = [item.strip() for item in line.split("=")]
 			if row[0].lower().strip() in tuned:
 				i = tuned.index(row[0].strip().lower())
 				parameters[i] = float(row[1].strip())
@@ -196,12 +190,22 @@ def read_parameters_from_file():
 			else:
 				print("[ERROR] Read invalid item %s" % row[0])
 				sys.exit(1)
+
+	missing_keys = user_defined.difference(set(d.keys()))
+	if len(missing_keys) > 0:
+		print("[ERROR] User must specify the following keys")
+		print(missing_keys)
+		sys.exit(1)
 				
+	# show parameters for tuning
 	for i in range(len(tuned)):
-		print("%s=%s" % (tuned[i], str(parameters[i])))
+		print("%s = %s" % (tuned[i], str(parameters[i])))
+
+	# show user-defined fixed parameters
 	for k, v in d.iteritems():
-		print("%s=%s" % (k, str(v)))
+		print("%s = %s" % (k, str(v)))
 		
+	# get confirmation
 	user_in = "x"
 	
 	while user_in not in ["y", "n"]:
@@ -213,11 +217,7 @@ def read_parameters_from_file():
 		sys.exit(1)
 
 def set_parameters():
-	#parameters = np.array([9000, 0.189, 300, -290, -293])
-	#parameters = np.array([9000, 0.1, 300, -300, -300])
-	#parameters = randomize_parameters()
-	parameters = read_parameters_from_file()
-	return parameters
+	return read_parameters_from_file()
 	
 def scipy_optimize(X, Y, aux_parameters, parameters):
 	print("[intial parameters] %s" % str(parameters))
@@ -273,8 +273,11 @@ def trim_data (X, Y, left_cutoff, right_cutoff):
 	return new_X, new_Y
 	
 if __name__ == "__main__":
-	# data and user-defined parameters
+	# load data from file
 	raw_X, raw_Y = load_data()
+	# load user-defined parameters from file
+	parameter_guess, aux_params = set_parameters()
+
 	optimization_left_cutoff = 1200
 	optimization_right_cutoff = 9000
 	
@@ -283,10 +286,8 @@ if __name__ == "__main__":
 
 	# simply remove the data which should not be optimized for
 	# make sure that Y is also trimmed
-	optimization_X, optimization_Y = trim_data(raw_X, raw_Y, optimization_left_cutoff, optimization_right_cutoff)
-	display_X, display_Y = trim_data(raw_X, raw_Y, graph_left_cutoff, graph_right_cutoff)
-	
-	parameter_guess, aux_params = set_parameters()
+	optimization_X, optimization_Y = trim_data(raw_X, raw_Y, aux_params["optimization_left_cutoff"], aux_params["optimization_right_cutoff"])
+	display_X, display_Y = trim_data(raw_X, raw_Y, aux_params["graph_left_cutoff"], aux_params["graph_right_cutoff"])
 	
 	new_params = scipy_optimize(optimization_X, optimization_Y, aux_params, parameter_guess)
 	
