@@ -37,9 +37,6 @@ def get_saturation_gradient (t, parameters, aux_parameters):
 	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
 
-	#old: df_dt = ((1 / (N0 * (K0 + K1) **2 )) * (K0 ** 2) * np.exp(K0 * K1 * (dt - t) / (N0 * (K0+K1)))+ 1 / N1) * (-1 / (C3*np.exp(r * (dt - t)) + 1)) + (C3 * r * (np.exp(r*(dt - t)))*((1/K1)*((K0/(K0+K1))*np.exp(K0 * K1 * (dt - t)/(N0 * (K0 + K1)))-1))+(dt-t)/N1) / ((C3*np.exp(r*(dr-t))+1)**2) + 1/N2
-	#df_dt = ((1 / (N0 * (K0 + K1) **2 )) * (K0 ** 2) * np.exp(K0 * K1 * (dt - t) / (N0 * (K0+K1)))+ 1 / N1) * (-1 / (C3*np.exp(r * (dt - t)) + 1)) + (C3 * r * (np.exp(r*(dt - t)))*((1/K1)*((K0/(K0+K1))*np.exp(K0 * K1 * (dt - t)/(N0 * (K0 + K1)))-1))+(dt-t)/N1) / ((C3*np.exp(r*(dt-t))+1)**2) + 1/N2
-
 	df_dk0 = np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(dt*K0*K1+K0*(N0-K1*t)+K1*N0)/(((K0+K1)**3)*(C3*N0*np.exp(r*(dt-t))+N0))
 	df_dk1 = (-1/((K1**2)*(C3*np.exp(r*(dt-t))+1)))*(K0*K1*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(-dt*(K0**2)+(K0**2)*t+K0*N0+K1*N0)/(N0*(K0+K1)**3)+((K0/(K0+K1))*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))-1))
 	df_dN0 = -(K0**2)*(dt-t)*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))/((N0**2)*((K0+K1)**2)*(C3*np.exp(r*(dt-t))+1))
@@ -202,7 +199,8 @@ def read_parameters_from_file():
 		print("%s = %s" % (tuned[i], str(parameters[i])))
 
 	# show user-defined fixed parameters
-	for k, v in d.iteritems():
+	for k in sorted(d.keys()):
+		v = d[k]
 		print("%s = %s" % (k, str(v)))
 		
 	# get confirmation
