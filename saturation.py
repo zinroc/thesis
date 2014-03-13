@@ -17,6 +17,7 @@ OUTPUT_FILE = "new_parameters.csv"
 #INPUT_FILE = "new_parameters.csv"
 #OUTPUT_FILE = "super_new_parameters.csv"
 DATA_FILE = "data.csv"
+MAX_ITER = 5000
 
 """
 These are the methods specific to the function being optimized
@@ -228,7 +229,7 @@ def scipy_optimize(X, Y, aux_parameters, parameters):
 	print("[initial loss] %.1f" % get_loss(X, Y, parameters, aux_parameters))
 	obj_fn = get_obj_function(X, Y, aux_parameters)
 	grad_obj_fn = get_gradient_function(X, Y, aux_parameters)
-	new_params = scipy.optimize.fmin_bfgs(obj_fn, parameters, fprime=grad_obj_fn)
+	new_params = scipy.optimize.fmin_bfgs(obj_fn, parameters, fprime=grad_obj_fn, maxiter=MAX_ITER)
 
 	print("[DEBUG] Finished BFGS optimization")
 	print("[DEBUG] Loss here is %.2f" % get_loss(X, Y, new_params, aux_parameters))
