@@ -12,10 +12,10 @@ import warnings
 
 TUNED_PARAMS = ["k0", "k1", "n0", "n1", "n2"]
 USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff"])
-INPUT_FILE = "parameters.csv"
-OUTPUT_FILE = "new_parameters.csv"
-#INPUT_FILE = "new_parameters.csv"
-#OUTPUT_FILE = "super_new_parameters.csv"
+#INPUT_FILE = "parameters.csv"
+#OUTPUT_FILE = "new_parameters.csv"
+INPUT_FILE = "new_parameters.csv"
+OUTPUT_FILE = "super_new_parameters.csv"
 DATA_FILE = "data.csv"
 
 """
@@ -229,9 +229,17 @@ def scipy_optimize(X, Y, aux_parameters, parameters):
 	obj_fn = get_obj_function(X, Y, aux_parameters)
 	grad_obj_fn = get_gradient_function(X, Y, aux_parameters)
 	new_params = scipy.optimize.fmin_bfgs(obj_fn, parameters, fprime=grad_obj_fn)
-	print("[final parameters] %s" % str(new_params))
-	print("[final loss] %.1f" % get_loss(X, Y, new_params, aux_parameters))
-	return new_params
+
+	print("[DEBUG] Finished BFGS optimization")
+	print("[DEBUG] Loss here is %.2f" % get_loss(X, Y, new_params, aux_parameters))
+
+	# now will try to do this again with a different algo
+	new_fn = lambda p: (Y - saturation_function (X, p, aux_parameters))
+	optimized_params = scipy.optimize.leastsq (new_fn, new_params)[0]
+	print("[DEBUG] Finished least squares optimization")
+	print("[DEBUG] parameters = %s" % str(optimized_params))
+	print("[DEBUG] final loss = %.2f" % get_loss(X, Y, optimized_params, aux_parameters))
+	return optimized_params
 	
 def load_data():
 	"""Return X, Y as np.array tuple."""
