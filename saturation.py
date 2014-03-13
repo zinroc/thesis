@@ -301,7 +301,7 @@ if __name__ == "__main__":
 			for i in range(len(TUNED_PARAMS)):
 				fp.write("%s = %s\n" % (TUNED_PARAMS[i].upper(), str(new_params[i])))
 				print("%s = %s" % (TUNED_PARAMS[i].upper(), str(new_params[i])))
-			for k in USER_DEFINED_PARAMS:
+			for k in sorted(USER_DEFINED_PARAMS):
 				fp.write("%s = %s\n" % (k, str(aux_params[k])))
 	
 		show_data(display_X, display_Y, parameter_guess, new_params, aux_params)
