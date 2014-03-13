@@ -69,7 +69,7 @@ def mod_maxwell(time, parameters, aux_parameters):
 	r = aux_parameters["r"]
 	adjusted_t = time-dt
 
-	return -1 * ((1/K1) * (1- (K0/(K0+K1)) * np.exp(-1*(adjusted_t)/T)) +(adjusted_t)/N1)
+	return -1 * ((1/K1) * (1 - (K0/(K0+K1)) * np.exp(-1 * (adjusted_t) / T)) + (adjusted_t)/N1)
 	#return -1*((1/K1)*(1-(K0/(K0+K1)) * np.exp((dt - time) / T)) + (time - dt) / N1)
 	
 def s_curve (time, parameters, aux_parameters):
@@ -139,7 +139,7 @@ def get_gradient(X, Y, parameters, aux_parameters):
 	"""Return gradient over all parameters.
 	Will return 0 for all parameters other than first 5, because not optimizing those."""
 
-	obj_grad = np.zeros(len(parameters))
+	obj_grad = np.zeros(len(parameters), dtype=np.float64)
 
 	# compute gradients for all data points
 	grad = get_saturation_gradient(X, parameters, aux_parameters)
@@ -157,7 +157,7 @@ def get_loss(X, Y, parameters, aux_parameters):
 
 def randomize_parameters():
 	# placeholders
-	parameters = np.zeros(5) * 1.0
+	parameters = np.zeros(5, dtype=np.float64) 
 	# fill in the last several, as they are user-generated
 	#parameters[5] = 5000.0
 	#parameters[6] = 1000.0
@@ -187,9 +187,9 @@ def read_parameters_from_file():
 			row = [item.strip() for item in line.split("=")]
 			if row[0].lower().strip() in TUNED_PARAMS:
 				i = TUNED_PARAMS.index(row[0].strip().lower())
-				parameters[i] = float(row[1].strip())
+				parameters[i] = np.float64(row[1].strip())
 			elif row[0].lower().strip() in USER_DEFINED_PARAMS:
-				d[row[0].lower().strip()] = float(row[1].strip())
+				d[row[0].lower().strip()] = np.float64(row[1].strip())
 			else:
 				print("[ERROR] Read invalid item %s" % row[0])
 				sys.exit(1)
@@ -255,10 +255,10 @@ def load_data():
 				header = False
 			else:
 				#print row
-				t = float(row[0])
+				t = np.float64(row[0])
 				time.append(t)
 				#Y_fitted.append(saturation_function())
-				f5.append(float(row[1]))
+				f5.append(np.float64(row[1]))
 
 	return (np.array(time), np.array(f5))
 
