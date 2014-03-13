@@ -10,6 +10,14 @@ import sys
 import scipy.optimize
 import warnings
 
+TUNED_PARAMS = ["k0", "k1", "n0", "n1", "n2"]
+USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff"])
+INPUT_FILE = "parameters.csv"
+OUTPUT_FILE = "new_parameters.csv"
+#INPUT_FILE = "new_parameters.csv"
+#OUTPUT_FILE = "super_new_parameters.csv"
+DATA_FILE = "data.csv"
+
 """
 These are the methods specific to the function being optimized
 """
@@ -168,35 +176,33 @@ def randomize_parameters():
 def read_parameters_from_file():
 	"""Read user-defined parameters from a file."""
 
-	tuned = ["k0", "k1", "n0", "n1", "n2"]
-	user_defined = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff"])
 	#placeholders
-	parameters = np.zeros(len(tuned)) * 1.0
+	parameters = np.zeros(len(TUNED_PARAMS)) * 1.0
 	d = {}
 
-	with open("parameters.csv", "rb") as fp:
+	with open(INPUT_FILE, "rb") as fp:
 		for line in fp:
 			if line.startswith("#") or len(line.strip()) == 0:
 				continue
 			row = [item.strip() for item in line.split("=")]
-			if row[0].lower().strip() in tuned:
-				i = tuned.index(row[0].strip().lower())
+			if row[0].lower().strip() in TUNED_PARAMS:
+				i = TUNED_PARAMS.index(row[0].strip().lower())
 				parameters[i] = float(row[1].strip())
-			elif row[0].lower().strip() in user_defined:
+			elif row[0].lower().strip() in USER_DEFINED_PARAMS:
 				d[row[0].lower().strip()] = float(row[1].strip())
 			else:
 				print("[ERROR] Read invalid item %s" % row[0])
 				sys.exit(1)
 
-	missing_keys = user_defined.difference(set(d.keys()))
+	missing_keys = USER_DEFINED_PARAMS.difference(set(d.keys()))
 	if len(missing_keys) > 0:
-		print("[ERROR] User must specify the following keys")
-		print(missing_keys)
+		print("[ERROR] User must specify the following keys:")
+		print(", ".join( missing_keys))
 		sys.exit(1)
 				
 	# show parameters for tuning
-	for i in range(len(tuned)):
-		print("%s = %s" % (tuned[i], str(parameters[i])))
+	for i in range(len(TUNED_PARAMS)):
+		print("%s = %s" % (TUNED_PARAMS[i], str(parameters[i])))
 
 	# show user-defined fixed parameters
 	for k in sorted(d.keys()):
@@ -234,7 +240,7 @@ def load_data():
 	f5 = []
 	header = True
 
-	with open("data.csv", "rb") as fp:
+	with open(DATA_FILE, "rb") as fp:
 		reader = csv.reader(fp, delimiter=",")
 		for row in reader:
 			if header:
@@ -289,14 +295,14 @@ if __name__ == "__main__":
 	
 	new_params = scipy_optimize(optimization_X, optimization_Y, aux_params, parameter_guess)
 	
-	tuned = ["k0", "k1", "n0", "n1", "n2"]
-	for i in range(len(new_params)):
-		print("%s = %.3f" % (tuned[i].upper(), new_params[i]))
-		
-	
 	if new_params is not None:
-		# showing optimization over the new data
-		print("parameters:")
-		print(new_params)
+		# write the parameters to disk
+		with open (OUTPUT_FILE, "w") as fp:
+			for i in range(len(TUNED_PARAMS)):
+				fp.write("%s = %s\n" % (TUNED_PARAMS[i].upper(), str(new_params[i])))
+				print("%s = %s" % (TUNED_PARAMS[i].upper(), str(new_params[i])))
+			for k in USER_DEFINED_PARAMS:
+				fp.write("%s = %s\n" % (k, str(aux_params[k])))
+	
 		show_data(display_X, display_Y, parameter_guess, new_params, aux_params)
-
+			
