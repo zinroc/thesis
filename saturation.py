@@ -64,11 +64,14 @@ def mod_maxwell(time, parameters, aux_parameters):
 	N1 = parameters[3]
 	N2 = parameters[4]
 	dt = aux_parameters["dt"]
-	T = N0 / K1 + N0 / K0
+	T = N0 / K1 + N0 / K0  # very large, when K1 very small; and this is a positive #
 	C3 = aux_parameters["c3"]
 	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
-	adjusted_t = time-dt
+	adjusted_t = time - dt # never larger than about 20, 000
+
+	#assert (np.all(T > 0))
+	#assert (np.all(time - dt > 0))
 
 	return -1 * ((1/K1) * (1 - (K0/(K0+K1)) * np.exp(-1 * (adjusted_t) / T)) + (adjusted_t)/N1)
 	#return -1*((1/K1)*(1-(K0/(K0+K1)) * np.exp((dt - time) / T)) + (time - dt) / N1)
