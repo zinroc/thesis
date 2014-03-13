@@ -12,10 +12,10 @@ import warnings
 
 TUNED_PARAMS = ["k0", "k1", "n0", "n1", "n2"]
 USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff"])
-#INPUT_FILE = "parameters.csv"
-#OUTPUT_FILE = "new_parameters.csv"
-INPUT_FILE = "new_parameters.csv"
-OUTPUT_FILE = "super_new_parameters.csv"
+INPUT_FILE = "parameters.csv"
+OUTPUT_FILE = "new_parameters.csv"
+#INPUT_FILE = "new_parameters.csv"
+#OUTPUT_FILE = "super_new_parameters.csv"
 DATA_FILE = "data.csv"
 
 """
