@@ -10,6 +10,7 @@ dt = 4500
 C3 = 1000
 Cvert = -11.1
 r = 0.1
+Cneg = -1
 optimization_left_cutoff = 1700
 optimization_right_cutoff = 8000
 graph_left_cutoff = 0
