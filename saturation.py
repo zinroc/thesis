@@ -11,7 +11,7 @@ import scipy.optimize
 import warnings
 
 TUNED_PARAMS = ["k0", "k1", "n0", "n1", "n2"]
-USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff"])
+USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff", "Cneg"])
 INPUT_FILE = "parameters.csv"
 OUTPUT_FILE = "new_parameters.csv"
 #INPUT_FILE = "new_parameters.csv"
@@ -46,10 +46,10 @@ def get_saturation_gradient (t, parameters, aux_parameters):
 	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
 
-	df_dk0 = np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(dt*K0*K1+K0*(N0-K1*t)+K1*N0)/(((K0+K1)**3)*(C3*N0*np.exp(r*(dt-t))+N0))
-	df_dk1 = (-1/((K1**2)*(C3*np.exp(r*(dt-t))+1)))*(K0*K1*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(-dt*(K0**2)+(K0**2)*t+K0*N0+K1*N0)/(N0*(K0+K1)**3)+((K0/(K0+K1))*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))-1))
-	df_dN0 = -(K0**2)*(dt-t)*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))/((N0**2)*((K0+K1)**2)*(C3*np.exp(r*(dt-t))+1))
-	df_dN1 = (t-dt)/((N1**2)*(C3*np.exp(r*(dt-t))+1))
+	df_dk0 = Cneg*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(dt*K0*K1+K0*(N0-K1*t)+K1*N0)/(((K0+K1)**3)*(C3*N0*np.exp(r*(dt-t))+N0))
+	df_dk1 = (1/((K1**2)*(C3*np.exp(r*(dt-t))+1)))*(Cneg)*(K0*K1*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(-dt*(K0**2)+(K0**2)*t+K0*N0+K1*N0)/(N0*(K0+K1)**3)+((K0/(K0+K1))*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))-1))
+	df_dN0 = (Cneg)*(K0**2)*(dt-t)*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))/((N0**2)*((K0+K1)**2)*(C3*np.exp(r*(dt-t))+1))
+	df_dN1 = (Cneg)*(t-dt)/((N1**2)*(C3*np.exp(r*(dt-t))+1))
 	df_dN2 = (dt-t)/(N2**2)
 	#OPTIONAL - finding dt
 	df_ddt = ((1/(N0*(K0+K1) ** 2))*(K0 ** 2)*np.exp((K0*K1*(dt-t))/(N0 * (K0+K1)))+1/N1)*(-1/(C3*np.exp(r*(dt-t))+1))+(C3*r*(np.exp(r*(dt-t)))*((1/K1)*((K0/(K0+K1))*np.exp((K0*K1*(dt-t)/(N0*(K0+K1))))-1))+(dt-t)/N1)/((C3*np.exp(r*(dt-t))+1) ** 2)-1/N2
@@ -68,12 +68,13 @@ def mod_maxwell(time, parameters, aux_parameters):
 	C3 = aux_parameters["c3"]
 	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
+	Cneg = aux_parameters["Cneg"]
 	adjusted_t = time - dt # never larger than about 20, 000
 
 	#assert (np.all(T > 0))
 	#assert (np.all(time - dt > 0))
 
-	return -1 * ((1/K1) * (1 - (K0/(K0+K1)) * np.exp(-1 * (adjusted_t) / T)) + (adjusted_t)/N1)
+	return Cneg * ((1/K1) * (1 - (K0/(K0+K1)) * np.exp(-1 * (adjusted_t) / T)) + (adjusted_t)/N1)
 	#return -1*((1/K1)*(1-(K0/(K0+K1)) * np.exp((dt - time) / T)) + (time - dt) / N1)
 	
 def s_curve (time, parameters, aux_parameters):
@@ -116,6 +117,7 @@ def saturation_function(time, parameters, aux_parameters):
 		* C3 
 		* Cvert
 		* r
+		* Cneg
 		
 	"""
 	
