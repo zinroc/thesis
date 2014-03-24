@@ -14,4 +14,4 @@ optimization_left_cutoff = 1700
 optimization_right_cutoff = 8000
 graph_left_cutoff = 0
 graph_right_cutoff = 20000
-Cneg = -1
+cneg = -1
