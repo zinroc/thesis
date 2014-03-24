@@ -11,7 +11,7 @@ import scipy.optimize
 import warnings
 
 TUNED_PARAMS = ["k0", "k1", "n0", "n1", "n2"]
-USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff", "Cneg"])
+USER_DEFINED_PARAMS = set(["dt", "c3", "cvert", "r", "graph_left_cutoff", "graph_right_cutoff", "optimization_left_cutoff", "optimization_right_cutoff", "cneg"])
 INPUT_FILE = "parameters.csv"
 OUTPUT_FILE = "new_parameters.csv"
 #INPUT_FILE = "new_parameters.csv"
@@ -45,6 +45,7 @@ def get_saturation_gradient (t, parameters, aux_parameters):
 	C3 = aux_parameters["c3"]
 	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
+	Cneg = aux_parameters["cneg"]
 
 	df_dk0 = Cneg*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(dt*K0*K1+K0*(N0-K1*t)+K1*N0)/(((K0+K1)**3)*(C3*N0*np.exp(r*(dt-t))+N0))
 	df_dk1 = (1/((K1**2)*(C3*np.exp(r*(dt-t))+1)))*(Cneg)*(K0*K1*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))*(-dt*(K0**2)+(K0**2)*t+K0*N0+K1*N0)/(N0*(K0+K1)**3)+((K0/(K0+K1))*np.exp((K0*K1*(dt-t))/(N0*(K0+K1)))-1))
@@ -68,7 +69,7 @@ def mod_maxwell(time, parameters, aux_parameters):
 	C3 = aux_parameters["c3"]
 	Cvert = aux_parameters["cvert"]
 	r = aux_parameters["r"]
-	Cneg = aux_parameters["Cneg"]
+	Cneg = aux_parameters["cneg"]
 	adjusted_t = time - dt # never larger than about 20, 000
 
 	#assert (np.all(T > 0))
@@ -104,7 +105,7 @@ def steady(time, parameters, aux_parameters):
 	r = aux_parameters["r"]
 	
 	# note that in Sergei's initial calculation, this is just time / N2 + Cvert
-	return (time-dt)/N2 + Cvert
+	return Cneg * ((time-dt)/N2 + Cvert)
 	
 def saturation_function(time, parameters, aux_parameters):
 	"""Parameters is a vector in the following order:
